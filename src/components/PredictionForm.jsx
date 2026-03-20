@@ -6,6 +6,42 @@ const characters = Object.keys(modelAssets.chars).sort();
 const stages = Object.keys(modelAssets.stages).sort();
 const players = modelAssets.player_wr ? Object.keys(modelAssets.player_wr).sort() : [];
 
+function PlayerAutocomplete({ label, id, value, onChange }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const filteredPlayers = value
+        ? players.filter(p => p.toLowerCase().includes(value.toLowerCase())).slice(0, 100)
+        : players.slice(0, 200); // Caps at 200 to keep UI highly responsive
+
+    return (
+        <div className="form-group autocomplete-container" onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setIsOpen(false);
+        }}>
+            <label htmlFor={id}>{label}</label>
+            <input
+                type="text"
+                id={id}
+                value={value}
+                onChange={(e) => { onChange(e.target.value); setIsOpen(true); }}
+                onClick={() => setIsOpen(true)}
+                onFocus={() => setIsOpen(true)}
+                placeholder="Type to search..."
+                autoComplete="off"
+            />
+            {isOpen && (
+                <ul className="autocomplete-dropdown">
+                    {filteredPlayers.map(p => (
+                        <li key={p} tabIndex={0} onMouseDown={(e) => { e.preventDefault(); onChange(p); setIsOpen(false); }}>
+                            {p}
+                        </li>
+                    ))}
+                    {filteredPlayers.length === 0 && <li style={{ cursor: 'default' }}>No players found</li>}
+                </ul>
+            )}
+        </div>
+    );
+}
+
 export default function PredictionForm() {
     const [formData, setFormData] = useState({
         p1_char: characters[0],
@@ -84,28 +120,18 @@ export default function PredictionForm() {
                     </div>
 
                     <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="p1Search">Load Player 1 (Optional)</label>
-                            <input
-                                type="text"
-                                id="p1Search"
-                                list="player-list"
-                                value={p1Search}
-                                onChange={handleP1Search}
-                                placeholder="Type to search..."
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="p2Search">Load Player 2 (Optional)</label>
-                            <input
-                                type="text"
-                                id="p2Search"
-                                list="player-list"
-                                value={p2Search}
-                                onChange={handleP2Search}
-                                placeholder="Type to search..."
-                            />
-                        </div>
+                        <PlayerAutocomplete
+                            label="Load Player 1 (Optional)"
+                            id="p1Search"
+                            value={p1Search}
+                            onChange={handleP1Search}
+                        />
+                        <PlayerAutocomplete
+                            label="Load Player 2 (Optional)"
+                            id="p2Search"
+                            value={p2Search}
+                            onChange={handleP2Search}
+                        />
                     </div>
 
                     <div className="form-row">
@@ -156,12 +182,6 @@ export default function PredictionForm() {
                     </div>
                 </div>
             )}
-
-            <datalist id="player-list">
-                {players.map(p => (
-                    <option key={p} value={p} />
-                ))}
-            </datalist>
         </div>
     );
 }
