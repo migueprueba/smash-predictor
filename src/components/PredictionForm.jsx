@@ -1,64 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { predictWinner, modelAssets } from '../utils/model';
 import './PredictionForm.css';
 
 const characters = Object.keys(modelAssets.chars).sort();
 const stages = Object.keys(modelAssets.stages).sort();
 const players = modelAssets.player_wr ? Object.keys(modelAssets.player_wr).sort() : [];
-
-function PlayerAutocomplete({ label, id, value, onChange }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const blurTimeout = useRef(null);
-
-    const filteredPlayers = value
-        ? players.filter(p => p.toLowerCase().includes(value.toLowerCase())).slice(0, 50)
-        : players.slice(0, 50);
-
-    const handleFocus = () => {
-        clearTimeout(blurTimeout.current);
-        setIsOpen(true);
-    };
-
-    const handleBlur = () => {
-        blurTimeout.current = setTimeout(() => setIsOpen(false), 200);
-    };
-
-    const handleSelect = (player) => {
-        clearTimeout(blurTimeout.current);
-        onChange(player);
-        setIsOpen(false);
-    };
-
-    return (
-        <div className="form-group autocomplete-container">
-            <label htmlFor={id}>{label}</label>
-            <input
-                type="text"
-                id={id}
-                value={value}
-                onChange={(e) => { onChange(e.target.value); setIsOpen(true); }}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                placeholder="Type to search..."
-                autoComplete="off"
-            />
-            {isOpen && filteredPlayers.length > 0 && (
-                <ul className="autocomplete-dropdown">
-                    {filteredPlayers.map(p => (
-                        <li key={p} onMouseDown={() => handleSelect(p)}>
-                            {p}
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {isOpen && filteredPlayers.length === 0 && (
-                <ul className="autocomplete-dropdown">
-                    <li style={{ cursor: 'default', color: '#64748b' }}>No players found</li>
-                </ul>
-            )}
-        </div>
-    );
-}
 
 export default function PredictionForm() {
     const [formData, setFormData] = useState({
@@ -69,21 +15,12 @@ export default function PredictionForm() {
         p2_wr: 0.5
     });
 
-    const [p1Search, setP1Search] = useState('');
-    const [p2Search, setP2Search] = useState('');
     const [result, setResult] = useState(null);
 
-    const handleP1Search = (val) => {
-        setP1Search(val);
-        if (modelAssets.player_wr && modelAssets.player_wr[val] !== undefined) {
-            setFormData(prev => ({ ...prev, p1_wr: Number(modelAssets.player_wr[val].toFixed(4)) }));
-        }
-    };
-
-    const handleP2Search = (val) => {
-        setP2Search(val);
-        if (modelAssets.player_wr && modelAssets.player_wr[val] !== undefined) {
-            setFormData(prev => ({ ...prev, p2_wr: Number(modelAssets.player_wr[val].toFixed(4)) }));
+    const handlePlayerSelect = (e, playerKey) => {
+        const playerName = e.target.value;
+        if (playerName && modelAssets.player_wr[playerName] !== undefined) {
+            setFormData(prev => ({ ...prev, [playerKey]: Number(modelAssets.player_wr[playerName].toFixed(4)) }));
         }
     };
 
@@ -136,18 +73,24 @@ export default function PredictionForm() {
                     </div>
 
                     <div className="form-row">
-                        <PlayerAutocomplete
-                            label="Load Player 1 (Optional)"
-                            id="p1Search"
-                            value={p1Search}
-                            onChange={handleP1Search}
-                        />
-                        <PlayerAutocomplete
-                            label="Load Player 2 (Optional)"
-                            id="p2Search"
-                            value={p2Search}
-                            onChange={handleP2Search}
-                        />
+                        <div className="form-group">
+                            <label htmlFor="p1_player">Load Player 1 (Optional)</label>
+                            <select id="p1_player" onChange={(e) => handlePlayerSelect(e, 'p1_wr')} defaultValue="">
+                                <option value="" disabled>-- Select a player --</option>
+                                {players.map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="p2_player">Load Player 2 (Optional)</label>
+                            <select id="p2_player" onChange={(e) => handlePlayerSelect(e, 'p2_wr')} defaultValue="">
+                                <option value="" disabled>-- Select a player --</option>
+                                {players.map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <div className="form-row">
