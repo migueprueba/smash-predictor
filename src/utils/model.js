@@ -79,7 +79,7 @@ export function predictWinner(userInput) {
     // So if scoreVal >= 0.5 it implies Player 1.
     // However, realistically in m2cgen, log-odds > 0 means positive class.
     // To strictly follow the instruction:
-    const isPlayer1Winner = scoreVal >= 0.5;
+    const isPlayer1Winner = scoreVal >= 0.4733;
 
     return {
         winner: isPlayer1Winner ? 'Player 1' : 'Player 2',
