@@ -55,16 +55,14 @@ export default function PredictionForm() {
     const [p2Search, setP2Search] = useState('');
     const [result, setResult] = useState(null);
 
-    const handleP1Search = (e) => {
-        const val = e.target.value;
+    const handleP1Search = (val) => {
         setP1Search(val);
         if (modelAssets.player_wr && modelAssets.player_wr[val] !== undefined) {
             setFormData(prev => ({ ...prev, p1_wr: Number(modelAssets.player_wr[val].toFixed(4)) }));
         }
     };
 
-    const handleP2Search = (e) => {
-        const val = e.target.value;
+    const handleP2Search = (val) => {
         setP2Search(val);
         if (modelAssets.player_wr && modelAssets.player_wr[val] !== undefined) {
             setFormData(prev => ({ ...prev, p2_wr: Number(modelAssets.player_wr[val].toFixed(4)) }));
