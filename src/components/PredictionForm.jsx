@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { predictWinner, modelAssets } from '../utils/model';
 import './PredictionForm.css';
 
@@ -8,34 +8,52 @@ const players = modelAssets.player_wr ? Object.keys(modelAssets.player_wr).sort(
 
 function PlayerAutocomplete({ label, id, value, onChange }) {
     const [isOpen, setIsOpen] = useState(false);
+    const blurTimeout = useRef(null);
 
     const filteredPlayers = value
-        ? players.filter(p => p.toLowerCase().includes(value.toLowerCase())).slice(0, 100)
-        : players.slice(0, 200); // Caps at 200 to keep UI highly responsive
+        ? players.filter(p => p.toLowerCase().includes(value.toLowerCase())).slice(0, 50)
+        : players.slice(0, 50);
+
+    const handleFocus = () => {
+        clearTimeout(blurTimeout.current);
+        setIsOpen(true);
+    };
+
+    const handleBlur = () => {
+        blurTimeout.current = setTimeout(() => setIsOpen(false), 200);
+    };
+
+    const handleSelect = (player) => {
+        clearTimeout(blurTimeout.current);
+        onChange(player);
+        setIsOpen(false);
+    };
 
     return (
-        <div className="form-group autocomplete-container" onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget)) setIsOpen(false);
-        }}>
+        <div className="form-group autocomplete-container">
             <label htmlFor={id}>{label}</label>
             <input
                 type="text"
                 id={id}
                 value={value}
                 onChange={(e) => { onChange(e.target.value); setIsOpen(true); }}
-                onClick={() => setIsOpen(true)}
-                onFocus={() => setIsOpen(true)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
                 placeholder="Type to search..."
                 autoComplete="off"
             />
-            {isOpen && (
+            {isOpen && filteredPlayers.length > 0 && (
                 <ul className="autocomplete-dropdown">
                     {filteredPlayers.map(p => (
-                        <li key={p} tabIndex={0} onMouseDown={(e) => { e.preventDefault(); onChange(p); setIsOpen(false); }}>
+                        <li key={p} onMouseDown={() => handleSelect(p)}>
                             {p}
                         </li>
                     ))}
-                    {filteredPlayers.length === 0 && <li style={{ cursor: 'default' }}>No players found</li>}
+                </ul>
+            )}
+            {isOpen && filteredPlayers.length === 0 && (
+                <ul className="autocomplete-dropdown">
+                    <li style={{ cursor: 'default', color: '#64748b' }}>No players found</li>
                 </ul>
             )}
         </div>
