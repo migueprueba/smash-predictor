@@ -1,13 +1,12 @@
 import { Routes, Route, Link } from 'react-router-dom'
+import PredictionForm from './components/PredictionForm'
 
 function Home() {
     return (
         <div className="page-content">
-            <h1>Welcome to Smash Predictor</h1>
-            <p>This is a premium React scaffolding optimized for GitHub Pages.</p>
-            <div className="card">
-                <p>Start building your amazing project here.</p>
-            </div>
+            <h1>Match Prediction</h1>
+            <p>Select match details to forecast the winner using machine learning.</p>
+            <PredictionForm />
         </div>
     )
 }
