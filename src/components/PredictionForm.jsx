@@ -4,6 +4,7 @@ import './PredictionForm.css';
 
 const characters = Object.keys(modelAssets.chars).sort();
 const stages = Object.keys(modelAssets.stages).sort();
+const players = modelAssets.player_wr ? Object.keys(modelAssets.player_wr).sort() : [];
 
 export default function PredictionForm() {
     const [formData, setFormData] = useState({
@@ -14,7 +15,25 @@ export default function PredictionForm() {
         p2_wr: 0.5
     });
 
+    const [p1Search, setP1Search] = useState('');
+    const [p2Search, setP2Search] = useState('');
     const [result, setResult] = useState(null);
+
+    const handleP1Search = (e) => {
+        const val = e.target.value;
+        setP1Search(val);
+        if (modelAssets.player_wr && modelAssets.player_wr[val] !== undefined) {
+            setFormData(prev => ({ ...prev, p1_wr: Number(modelAssets.player_wr[val].toFixed(4)) }));
+        }
+    };
+
+    const handleP2Search = (e) => {
+        const val = e.target.value;
+        setP2Search(val);
+        if (modelAssets.player_wr && modelAssets.player_wr[val] !== undefined) {
+            setFormData(prev => ({ ...prev, p2_wr: Number(modelAssets.player_wr[val].toFixed(4)) }));
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -66,6 +85,31 @@ export default function PredictionForm() {
 
                     <div className="form-row">
                         <div className="form-group">
+                            <label htmlFor="p1Search">Load Player 1 (Optional)</label>
+                            <input
+                                type="text"
+                                id="p1Search"
+                                list="player-list"
+                                value={p1Search}
+                                onChange={handleP1Search}
+                                placeholder="Type to search..."
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="p2Search">Load Player 2 (Optional)</label>
+                            <input
+                                type="text"
+                                id="p2Search"
+                                list="player-list"
+                                value={p2Search}
+                                onChange={handleP2Search}
+                                placeholder="Type to search..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
                             <label htmlFor="p1_wr">Player 1 Win Rate (0.0 - 1.0)</label>
                             <input
                                 type="number"
@@ -112,6 +156,12 @@ export default function PredictionForm() {
                     </div>
                 </div>
             )}
+
+            <datalist id="player-list">
+                {players.map(p => (
+                    <option key={p} value={p} />
+                ))}
+            </datalist>
         </div>
     );
 }
