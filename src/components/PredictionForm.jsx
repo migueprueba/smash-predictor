@@ -1,10 +1,94 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { predictWinner, modelAssets } from '../utils/model';
 import './PredictionForm.css';
 
 const characters = Object.keys(modelAssets.chars).sort();
 const stages = Object.keys(modelAssets.stages).sort();
 const players = modelAssets.player_wr ? Object.keys(modelAssets.player_wr).sort() : [];
+
+function PlayerAutocomplete({ label, id, onSelect }) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+    const [page, setPage] = useState(0);
+    const dropdownRef = useRef(null);
+    const ITEMS_PER_PAGE = 10;
+
+    const filteredPlayers = players.filter(p =>
+        p.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredPlayers.length / ITEMS_PER_PAGE);
+    const paginatedPlayers = filteredPlayers.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setPage(0);
+        setIsOpen(true);
+    };
+
+    const handleSelect = (playerName) => {
+        const wr = modelAssets.player_wr[playerName];
+        onSelect(Number(wr.toFixed(2)));
+        setSearchTerm(playerName);
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="form-group autocomplete-container" ref={dropdownRef}>
+            <label htmlFor={id}>{label}</label>
+            <input
+                type="text"
+                id={id}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onFocus={() => setIsOpen(true)}
+                placeholder="Search player..."
+                autoComplete="off"
+            />
+            {isOpen && (
+                <div className="autocomplete-dropdown">
+                    <ul>
+                        {paginatedPlayers.map(p => (
+                            <li key={p} onClick={() => handleSelect(p)}>
+                                {p} <span className="wr-hint">({(modelAssets.player_wr[p] * 100).toFixed(1)}%)</span>
+                            </li>
+                        ))}
+                        {filteredPlayers.length === 0 && <li>No players found</li>}
+                    </ul>
+                    {totalPages > 1 && (
+                        <div className="pagination-controls">
+                            <button
+                                type="button"
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                            >
+                                Prev
+                            </button>
+                            <span>{page + 1} / {totalPages}</span>
+                            <button
+                                type="button"
+                                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                disabled={page === totalPages - 1}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function PredictionForm() {
     const [formData, setFormData] = useState({
@@ -17,11 +101,8 @@ export default function PredictionForm() {
 
     const [result, setResult] = useState(null);
 
-    const handlePlayerSelect = (e, playerKey) => {
-        const playerName = e.target.value;
-        if (playerName && modelAssets.player_wr[playerName] !== undefined) {
-            setFormData(prev => ({ ...prev, [playerKey]: Number(modelAssets.player_wr[playerName].toFixed(4)) }));
-        }
+    const updateWinRate = (wr, playerKey) => {
+        setFormData(prev => ({ ...prev, [playerKey]: wr }));
     };
 
     const handleChange = (e) => {
@@ -73,24 +154,16 @@ export default function PredictionForm() {
                     </div>
 
                     <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="p1_player">Load Player 1 (Optional)</label>
-                            <select id="p1_player" onChange={(e) => handlePlayerSelect(e, 'p1_wr')} defaultValue="">
-                                <option value="" disabled>-- Select a player --</option>
-                                {players.map(p => (
-                                    <option key={p} value={p}>{p}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="p2_player">Load Player 2 (Optional)</label>
-                            <select id="p2_player" onChange={(e) => handlePlayerSelect(e, 'p2_wr')} defaultValue="">
-                                <option value="" disabled>-- Select a player --</option>
-                                {players.map(p => (
-                                    <option key={p} value={p}>{p}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <PlayerAutocomplete
+                            label="Load Player 1 (Optional)"
+                            id="p1_player"
+                            onSelect={(wr) => updateWinRate(wr, 'p1_wr')}
+                        />
+                        <PlayerAutocomplete
+                            label="Load Player 2 (Optional)"
+                            id="p2_player"
+                            onSelect={(wr) => updateWinRate(wr, 'p2_wr')}
+                        />
                     </div>
 
                     <div className="form-row">

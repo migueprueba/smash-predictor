@@ -43,6 +43,8 @@
 
 .form-row .form-group {
     flex: 1;
+    min-width: 0;
+    /* Ensures the flex item can shrink below its content width */
 }
 
 .form-group {
@@ -165,6 +167,12 @@
 
 .autocomplete-container {
     position: relative;
+    width: 100%;
+}
+
+.autocomplete-container input {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .autocomplete-dropdown {
@@ -191,6 +199,9 @@
     color: #cbd5e1;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: background 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .autocomplete-dropdown li:last-child {
@@ -209,4 +220,50 @@
 .autocomplete-dropdown::-webkit-scrollbar-thumb {
     background: rgba(96, 165, 250, 0.5);
     border-radius: 3px;
+}
+
+.autocomplete-dropdown ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.wr-hint {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-left: 0.5rem;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.5);
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.pagination-controls button {
+    background: #334155;
+    border: none;
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background: #475569;
+}
+
+.pagination-controls button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.pagination-controls span {
+    font-family: monospace;
 }
